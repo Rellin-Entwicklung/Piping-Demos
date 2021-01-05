@@ -1,33 +1,34 @@
 from multiprocessing import Process, Pipe, Queue, current_process
 
+from datetime import datetime
 import time, random, serial, os
 
-global parent_conn, parent_connB, parent_connC, statusQ, statusQ_B, statusQ_C
-myTempSensor = 1
+global parent_conn
+dta1 = 1
 
-def gettempProc(conn,dta2):
-    print("gettempproc gerufen")
+def getSensorData(conn,dta1):
+    print("getsensorData gerufen")
     while (True):
-        t = time.time()
-        print("time: ",t,dta2)
-        time.sleep(1.5) #.1+~.83 = ~1.33 seconds
-        dta_1 = 34
-        dta_2 = 35
-        dta_3 = 36
-        conn.send([dta_1,dta_2])
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        #print("time: ",timestamp)
+        time.sleep(1.5)
+        dta_1 = random.randint(1,9)
+        dta_2 = random.randint(1,9)
+        dta_3 = random.randint(1,9)
+        conn.send([timestamp, dta_1,dta_2, dta_3])
 
 def Control_Proc():
     p = current_process()
     print('Starting:', p.name, p.pid)
     parent_conn_temp, child_conn_temp = Pipe()
-    ptemp = Process(name="gettempProc", target=gettempProc, args=(child_conn_temp, myTempSensor))
+    ptemp = Process(name="getSensorData", target=getSensorData, args=(child_conn_temp,dta1))
     ptemp.daemon = True
     ptemp.start()
 
     while(True):
         while parent_conn_temp.poll():
-            data_01,data_02 = parent_conn_temp.recv()
-            print("data: ",data_01)
+            timestamp, data_01,data_02, data_03 = parent_conn_temp.recv()
+            print(timestamp, " data01: ",data_01, "data_02: ",data_02, "data_03: ",data_03)
 
 
 if __name__ == '__main__':
