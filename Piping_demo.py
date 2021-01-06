@@ -1,9 +1,9 @@
-from multiprocessing import Process, Pipe, Queue, current_process
+from multiprocessing import Process, Pipe, current_process
 
 from datetime import datetime
-import time, random, serial, os
+import time, random
 
-global parent_conn
+
 dta1 = 1
 
 def getSensorData(conn,dta1):
@@ -22,15 +22,18 @@ def getSensorData(conn,dta1):
 def Control_Proc():
     p = current_process()
     print('Starting:', p.name, p.pid)
-    parent_conn_temp, child_conn_temp = Pipe()
-    ptemp = Process(name="getSensorData", target=getSensorData, args=(child_conn_temp,dta1))
+    parent_conn, child_conn = Pipe()
+    ptemp = Process(name="getSensorData", target=getSensorData,\
+    args=(child_conn,dta1))
     ptemp.daemon = True
     ptemp.start()
 
     while(True):
-        while parent_conn_temp.poll():
-            timestamp, data_01,data_02, data_03 = parent_conn_temp.recv()
-            print(timestamp, " data01: ",data_01, "data_02: ",data_02, "data_03: ",data_03)
+        while parent_conn.poll():
+            timestamp, data_01,data_02, data_03 \
+            = parent_conn.recv()
+            print(timestamp, " data01: ",data_01, "data_02: "\
+            ,data_02, "data_03: ",data_03)
             time.sleep(5)
 
 
